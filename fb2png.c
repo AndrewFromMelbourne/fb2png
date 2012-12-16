@@ -72,6 +72,12 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if ((vinfo.bits_per_pixel != 16) && (vinfo.bits_per_pixel != 32))
+	{
+		fprintf(stderr, "Error: framebuffer must be either 16 or 32 bits per pixel");
+        exit(EXIT_FAILURE);
+	}
+
     framebuffersize = vinfo.xres * vinfo.yres * (vinfo.bits_per_pixel / 8);
 
     fbp = (unsigned char *)mmap(0,
