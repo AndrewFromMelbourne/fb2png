@@ -7,41 +7,69 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-int main()
+int main(int argc, char *argv[])
 {
+	char *fbdevice = "/dev/fb0";
     int fbfd = 0;
     struct fb_var_screeninfo vinfo;
     struct fb_fix_screeninfo finfo;
     long framebuffersize = 0;
     unsigned char *fbp = NULL;
 
+	char *pngname = "fb.png";
 	png_structp png_ptr;
 	png_infop info_ptr;
 	FILE *pngfp = NULL;
 	png_bytep png_buffer = NULL;
 
-    int x = 0, y = 0;
+    int y = 0;
     long int location = 0;
+
+	int opt;
 
 	//--------------------------------------------------------------------
 
-    fbfd = open("/dev/fb0", O_RDWR);
+	while ((opt = getopt(argc, argv, "d:p:")) != -1)
+	{
+		switch (opt)
+		{
+		case 'd':
+
+			fbdevice = optarg;
+			break;
+
+		case 'p':
+
+			pngname = optarg;
+			break;
+
+		default:
+
+			fprintf(stderr, "Usage: %s [-d device] [-p pngname]\n",
+					argv[0]);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	//--------------------------------------------------------------------
+
+    fbfd = open(fbdevice, O_RDWR);
     if (fbfd == -1)
 	{
-        perror("Error: cannot open framebuffer /dev/fb0");
-        exit(1);
+        perror("Error: cannot open framebuffer");
+        exit(EXIT_FAILURE);
     }
 
     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1)
 	{
         perror("Error: reading framebuffer fixed information");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1)
 	{
         perror("Error: reading framebuffer variable information");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     framebuffersize = vinfo.xres * vinfo.yres * (vinfo.bits_per_pixel / 8);
@@ -55,7 +83,7 @@ int main()
     if ((int)fbp == -1)
 	{
         perror("Error: failed to map framebuffer device to memory");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 	//--------------------------------------------------------------------
@@ -67,28 +95,28 @@ int main()
 	if (png_ptr == NULL)
 	{
 		fprintf(stderr, "Error: could not allocate PNG write struct\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	info_ptr = png_create_info_struct(png_ptr);
 	if (info_ptr == NULL)
 	{
 		fprintf(stderr, "Error: could not allocate PNG info struct\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (setjmp(png_jmpbuf(png_ptr)))
 	{
 		fprintf(stderr, "Error: creating PNG\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
-	pngfp = fopen("fb.png", "wb");
+	pngfp = fopen(pngname, "wb");
 
 	if (pngfp == NULL)
 	{
-		fprintf(stderr, "Error: Unable to create fb.png\n");
-		exit(1);
+		fprintf(stderr, "Error: Unable to create %s\n", pngname);
+		exit(EXIT_FAILURE);
 	}
 
 	png_init_io(png_ptr, pngfp);
@@ -118,6 +146,8 @@ int main()
 
     for (y = 0; y < vinfo.yres; y++)
 	{
+		int x;
+
         for (x = 0; x < vinfo.xres; x++)
 		{
 			int pb_offset = 3 * x;
