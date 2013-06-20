@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
     int fbfd = 0;
     struct fb_var_screeninfo vinfo;
     struct fb_fix_screeninfo finfo;
-    long framebuffersize = 0;
     unsigned char *fbp = NULL;
 
 	char *pngname = "fb.png";
@@ -23,7 +22,6 @@ int main(int argc, char *argv[])
 	png_bytep png_buffer = NULL;
 
     int y = 0;
-    long int location = 0;
 
 	int opt;
 
@@ -72,16 +70,16 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if ((vinfo.bits_per_pixel != 16) && (vinfo.bits_per_pixel != 32))
+    if ((vinfo.bits_per_pixel != 16) &&
+	    (vinfo.bits_per_pixel != 24) &&
+        (vinfo.bits_per_pixel != 32))
 	{
-		fprintf(stderr, "Error: framebuffer must be either 16 or 32 bits per pixel");
+		fprintf(stderr, "Error: framebuffer must be either 16, 24 or 32 bits per pixel");
         exit(EXIT_FAILURE);
 	}
 
-    framebuffersize = vinfo.xres * vinfo.yres * (vinfo.bits_per_pixel / 8);
-
     fbp = (unsigned char *)mmap(0,
-								framebuffersize,
+								finfo.smem_len,
 								PROT_READ | PROT_WRITE,
 								MAP_SHARED,
 								fbfd,
@@ -158,18 +156,12 @@ int main(int argc, char *argv[])
 		{
 			int pb_offset = 3 * x;
 
-            location = (x+vinfo.xoffset)
-					 * (vinfo.bits_per_pixel/8)
-					 + (y+vinfo.yoffset)
-					 * finfo.line_length;
+			long int location = (x+vinfo.xoffset)
+					 		  * (vinfo.bits_per_pixel/8)
+					 		  + (y+vinfo.yoffset)
+					 		  * finfo.line_length;
 
-            if (vinfo.bits_per_pixel == 32)
-			{
-				png_buffer[pb_offset + 2] = *(fbp + location);
-				png_buffer[pb_offset + 1] = *(fbp + location + 1);
-				png_buffer[pb_offset] = *(fbp + location + 2);
-            }
-			else
+            if (vinfo.bits_per_pixel == 16)
 			{
                 unsigned short int t = *((unsigned short int*)(fbp + location));
                 int b = (((t >> 11) & 0x1F) * 255) / 31;
@@ -179,6 +171,12 @@ int main(int argc, char *argv[])
 				png_buffer[pb_offset + 2] = r;
 				png_buffer[pb_offset + 1] = g;
 				png_buffer[pb_offset] = b;
+            }
+			else
+			{
+				png_buffer[pb_offset + 2] = *(fbp + location);
+				png_buffer[pb_offset + 1] = *(fbp + location + 1);
+				png_buffer[pb_offset] = *(fbp + location + 2);
             }
         }
 
@@ -194,7 +192,7 @@ int main(int argc, char *argv[])
 
 	//--------------------------------------------------------------------
 
-    munmap(fbp, framebuffersize);
+    munmap(fbp, finfo.smem_len);
     close(fbfd);
 
 	//--------------------------------------------------------------------
