@@ -164,19 +164,19 @@ int main(int argc, char *argv[])
             if (vinfo.bits_per_pixel == 16)
             {
                 unsigned short int t = *((unsigned short int*)(fbp + location));
-                int b = (((t >> 11) & 0x1F) * 255) / 31;
+                int r = (((t >> 11) & 0x1F) * 255) / 31;
                 int g = (((t >> 5) & 0x3F) * 255) / 63;
-                int r = ((t & 0x1F) * 255) / 31;
+                int b = ((t & 0x1F) * 255) / 31;
 
-                png_buffer[pb_offset + 2] = r;
+                png_buffer[pb_offset] = r;
                 png_buffer[pb_offset + 1] = g;
-                png_buffer[pb_offset] = b;
+                png_buffer[pb_offset + 2] = b;
             }
             else
             {
-                png_buffer[pb_offset + 2] = *(fbp + location);
+                png_buffer[pb_offset] = *(fbp + location);
                 png_buffer[pb_offset + 1] = *(fbp + location + 1);
-                png_buffer[pb_offset] = *(fbp + location + 2);
+                png_buffer[pb_offset + 2] = *(fbp + location + 2);
             }
         }
 
