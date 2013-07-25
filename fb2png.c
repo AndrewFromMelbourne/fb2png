@@ -146,10 +146,6 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-	printf("red: %d/%d\n", vinfo.red.length, vinfo.red.offset);
-	printf("green: %d/%d\n", vinfo.green.length, vinfo.green.offset);
-	printf("blue: %d/%d\n", vinfo.blue.length, vinfo.blue.offset);
-
     //--------------------------------------------------------------------
 
     for (y = 0; y < vinfo.yres; y++)
