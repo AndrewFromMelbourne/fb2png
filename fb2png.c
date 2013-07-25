@@ -146,6 +146,10 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
+	printf("red: %d/%d\n", vinfo.red.length, vinfo.red.offset);
+	printf("green: %d/%d\n", vinfo.green.length, vinfo.green.offset);
+	printf("blue: %d/%d\n", vinfo.blue.length, vinfo.blue.offset);
+
     //--------------------------------------------------------------------
 
     for (y = 0; y < vinfo.yres; y++)
@@ -156,9 +160,9 @@ int main(int argc, char *argv[])
         {
             int pb_offset = 3 * x;
 
-            long int location = (x+vinfo.xoffset)
+            long int location = (x + vinfo.xoffset)
                                * (vinfo.bits_per_pixel/8)
-                               + (y+vinfo.yoffset)
+                               + (y + vinfo.yoffset)
                                * finfo.line_length;
 
             if (vinfo.bits_per_pixel == 16)
@@ -188,6 +192,7 @@ int main(int argc, char *argv[])
     free(png_buffer);
     png_buffer = NULL;
     png_write_end(png_ptr, NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(pngfp);
 
     //--------------------------------------------------------------------
