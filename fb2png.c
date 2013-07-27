@@ -70,16 +70,16 @@ int main(int argc, char *argv[])
         (vinfo.bits_per_pixel != 32))
     {
         fprintf(stderr, "Error: framebuffer must be either 16, ");
-		fprintf(stderr, "24 or 32 bits per pixel\n");
+        fprintf(stderr, "24 or 32 bits per pixel\n");
         exit(EXIT_FAILURE);
     }
 
     uint8_t *fbp = mmap(0,
-						finfo.smem_len,
-						PROT_READ | PROT_WRITE,
-						MAP_SHARED,
-						fbfd,
-						0);
+                        finfo.smem_len,
+                        PROT_READ | PROT_WRITE,
+                        MAP_SHARED,
+                        fbfd,
+                        0);
 
     if ((int)fbp == -1)
     {
@@ -90,9 +90,9 @@ int main(int argc, char *argv[])
     //--------------------------------------------------------------------
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-												  NULL,
-												  NULL,
-												  NULL);
+                                                  NULL,
+                                                  NULL,
+                                                  NULL);
 
     if (png_ptr == NULL)
     {
@@ -151,9 +151,9 @@ int main(int argc, char *argv[])
     int g_mask = (1 << vinfo.green.length) - 1;
     int b_mask = (1 << vinfo.blue.length) - 1;
 
-	int bytes_per_pixel = vinfo.bits_per_pixel / 8;
+    int bytes_per_pixel = vinfo.bits_per_pixel / 8;
 
-	int y = 0;
+    int y = 0;
 
     for (y = 0; y < vinfo.yres; y++)
     {
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-				uint8_t *pixels = fbp + fb_offset;
+                uint8_t *pixels = fbp + fb_offset;
 
                 png_buffer[pb_offset] = *(pixels+(vinfo.red.offset/8));
                 png_buffer[pb_offset+1] = *(pixels+(vinfo.green.offset/8));
