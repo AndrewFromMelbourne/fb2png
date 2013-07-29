@@ -10,6 +10,7 @@
 
 int main(int argc, char *argv[])
 {
+    char *program = argv[0];
     char *fbdevice = "/dev/fb0";
     char *pngname = "fb.png";
 
@@ -33,8 +34,9 @@ int main(int argc, char *argv[])
 
         default:
 
-            fprintf(stderr, "Usage: %s [-d device] [-p pngname]\n",
-                    argv[0]);
+            fprintf(stderr,
+                    "Usage: %s [-d device] [-p pngname]\n",
+                    program);
             exit(EXIT_FAILURE);
         }
     }
@@ -45,7 +47,8 @@ int main(int argc, char *argv[])
 
     if (fbfd == -1)
     {
-        perror("Error: cannot open framebuffer");
+        fprintf(stderr, "%s: cannot open framebuffer", program);
+        perror(program);
         exit(EXIT_FAILURE);
     }
 
@@ -53,7 +56,10 @@ int main(int argc, char *argv[])
 
     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1)
     {
-        perror("Error: reading framebuffer fixed information");
+        fprintf(stderr,
+                "%s: reading framebuffer fixed information",
+                program);
+        perror(program);
         exit(EXIT_FAILURE);
     }
 
@@ -61,7 +67,10 @@ int main(int argc, char *argv[])
 
     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1)
     {
-        perror("Error: reading framebuffer variable information");
+        fprintf(stderr,
+                "%s: reading framebuffer variable information",
+                program);
+        perror(program);
         exit(EXIT_FAILURE);
     }
 
@@ -69,8 +78,8 @@ int main(int argc, char *argv[])
         (vinfo.bits_per_pixel != 24) &&
         (vinfo.bits_per_pixel != 32))
     {
-        fprintf(stderr, "Error: framebuffer must be either 16, ");
-        fprintf(stderr, "24 or 32 bits per pixel\n");
+        fprintf(stderr, "%s: only 16, 24 and 32 ", program);
+        fprintf(stderr, "bits per pixels supported\n");
         exit(EXIT_FAILURE);
     }
 
@@ -83,7 +92,10 @@ int main(int argc, char *argv[])
 
     if ((int)fbp == -1)
     {
-        perror("Error: failed to map framebuffer device to memory");
+        fprintf(stderr,
+                "%s: failed to map framebuffer device to memory",
+                program);
+        perror(program);
         exit(EXIT_FAILURE);
     }
 
@@ -96,7 +108,9 @@ int main(int argc, char *argv[])
 
     if (png_ptr == NULL)
     {
-        fprintf(stderr, "Error: could not allocate PNG write struct\n");
+        fprintf(stderr,
+                "%s: could not allocate PNG write struct\n",
+                program);
         exit(EXIT_FAILURE);
     }
 
@@ -104,13 +118,17 @@ int main(int argc, char *argv[])
 
     if (info_ptr == NULL)
     {
-        fprintf(stderr, "Error: could not allocate PNG info struct\n");
+        fprintf(stderr,
+                "%s: could not allocate PNG info struct\n",
+                program);
         exit(EXIT_FAILURE);
     }
 
     if (setjmp(png_jmpbuf(png_ptr)))
     {
-        fprintf(stderr, "Error: creating PNG\n");
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+
+        fprintf(stderr, "%s: error creating PNG\n", program);
         exit(EXIT_FAILURE);
     }
 
@@ -118,7 +136,7 @@ int main(int argc, char *argv[])
 
     if (pngfp == NULL)
     {
-        fprintf(stderr, "Error: Unable to create %s\n", pngname);
+        fprintf(stderr, "%s: Unable to create %s\n", program, pngname);
         exit(EXIT_FAILURE);
     }
 
@@ -141,7 +159,7 @@ int main(int argc, char *argv[])
 
     if (png_buffer == NULL)
     {
-        fprintf(stderr, "Unable to allocate buffer\n");
+        fprintf(stderr, "%s: Unable to allocate buffer\n", program);
         exit(EXIT_FAILURE);
     }
 
@@ -166,26 +184,40 @@ int main(int argc, char *argv[])
             long int fb_offset = (x + vinfo.xoffset) * (bytes_per_pixel)
                                + (y + vinfo.yoffset) * finfo.line_length;
 
-            if (vinfo.bits_per_pixel == 16)
+            uint32_t pixel = 0;
+
+            switch (vinfo.bits_per_pixel)
             {
-                uint16_t pixel = *((uint16_t *)(fbp + fb_offset));
+            case 16:
 
-                int r = (pixel >> vinfo.red.offset) & r_mask;
-                int g = (pixel >> vinfo.green.offset) & g_mask;
-                int b = (pixel >> vinfo.blue.offset) & b_mask;
+                pixel = *((uint16_t *)(fbp + fb_offset));
+                break;
 
-                png_buffer[pb_offset] = (r * 0xFF) / r_mask;
-                png_buffer[pb_offset + 1] = (g * 0xFF)  / g_mask;
-                png_buffer[pb_offset + 2] = (b * 0xFF)  / b_mask;
+            case 24:
+
+                pixel += *(fbp + fb_offset);
+                pixel += *(fbp + fb_offset + 1) << 8;
+                pixel += *(fbp + fb_offset + 2) << 16;
+                break;
+
+            case 32:
+
+                pixel = *((uint32_t *)(fbp + fb_offset));
+                break;
+
+            default:
+
+                // nothing to do
+                break;
             }
-            else
-            {
-                uint8_t *pixels = fbp + fb_offset;
 
-                png_buffer[pb_offset] = *(pixels+(vinfo.red.offset/8));
-                png_buffer[pb_offset+1] = *(pixels+(vinfo.green.offset/8));
-                png_buffer[pb_offset+2] = *(pixels+(vinfo.blue.offset/8));
-            }
+            png_byte r = (pixel >> vinfo.red.offset) & r_mask;
+            png_byte g = (pixel >> vinfo.green.offset) & g_mask;
+            png_byte b = (pixel >> vinfo.blue.offset) & b_mask;
+
+            png_buffer[pb_offset] = (r * 0xFF) / r_mask;
+            png_buffer[pb_offset + 1] = (g * 0xFF)  / g_mask;
+            png_buffer[pb_offset + 2] = (b * 0xFF)  / b_mask;
         }
 
         png_write_row(png_ptr, png_buffer);
