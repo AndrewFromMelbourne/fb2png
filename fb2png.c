@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
         {
             int pb_offset = 3 * x;
 
-            long int fb_offset = (x + vinfo.xoffset) * (bytes_per_pixel)
-                               + (y + vinfo.yoffset) * finfo.line_length;
+            size_t fb_offset = (x + vinfo.xoffset) * (bytes_per_pixel)
+                             + (y + vinfo.yoffset) * finfo.line_length;
 
             uint32_t pixel = 0;
 
