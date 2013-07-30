@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <png.h>
 #include <stdlib.h>
@@ -47,8 +48,10 @@ int main(int argc, char *argv[])
 
     if (fbfd == -1)
     {
-        fprintf(stderr, "%s: cannot open framebuffer", program);
-        perror(program);
+        fprintf(stderr,
+                "%s: cannot open framebuffer - %s",
+                program,
+                strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -57,9 +60,9 @@ int main(int argc, char *argv[])
     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1)
     {
         fprintf(stderr,
-                "%s: reading framebuffer fixed information",
-                program);
-        perror(program);
+                "%s: reading framebuffer fixed information - %s",
+                program,
+                strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -68,9 +71,9 @@ int main(int argc, char *argv[])
     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1)
     {
         fprintf(stderr,
-                "%s: reading framebuffer variable information",
-                program);
-        perror(program);
+                "%s: reading framebuffer variable information - %s",
+                program,
+                strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -93,9 +96,9 @@ int main(int argc, char *argv[])
     if ((int)fbp == -1)
     {
         fprintf(stderr,
-                "%s: failed to map framebuffer device to memory",
-                program);
-        perror(program);
+                "%s: failed to map framebuffer device to memory - %s",
+                program,
+                strerror(errno));
         exit(EXIT_FAILURE);
     }
 
