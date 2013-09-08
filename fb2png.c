@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
                     "Usage: %s [-d device] [-p pngname]\n",
                     program);
             exit(EXIT_FAILURE);
+			break;
         }
     }
 
