@@ -1,5 +1,5 @@
 CFLAGS = -g -O2 -Wall  $(shell libpng-config --cflags)
-LDFLAGS = $(shell libpng-config --ldflags)
+LDLIBS = $(shell libpng-config --ldflags)
 
 PROGRAMS = fb2png
 
