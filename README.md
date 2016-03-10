@@ -1,1 +1,1 @@
-A program to read the Linux framebuffer and save it as a PNG file.
+A program to read the Linux framebuffer and save it as a PNG file. [![Build Status](https://travis-ci.org/AndrewFromMelbourne/fb2png.svg?branch=master)](https://travis-ci.org/AndrewFromMelbourne/fb2png)
