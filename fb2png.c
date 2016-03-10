@@ -115,14 +115,17 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    uint8_t *fbp = mmap(0,
-                        finfo.smem_len,
-                        PROT_READ | PROT_WRITE,
-                        MAP_SHARED,
-                        fbfd,
-                        0);
+    void *memp = mmap(0,
+                      finfo.smem_len,
+                      PROT_READ | PROT_WRITE,
+                      MAP_SHARED,
+                      fbfd,
+                      0);
 
-    if ((int)fbp == -1)
+    close(fbfd);
+    fbfd = -1;
+
+    if (memp == MAP_FAILED)
     {
         fprintf(stderr,
                 "%s: failed to map framebuffer device to memory - %s",
@@ -130,6 +133,9 @@ int main(int argc, char *argv[])
                 strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+    uint8_t *fbp = memp;
+    memp = NULL;
 
     //--------------------------------------------------------------------
 
@@ -266,7 +272,6 @@ int main(int argc, char *argv[])
     //--------------------------------------------------------------------
 
     munmap(fbp, finfo.smem_len);
-    close(fbfd);
 
     //--------------------------------------------------------------------
 
